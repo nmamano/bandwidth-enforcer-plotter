@@ -1,0 +1,20 @@
+{
+  "files": {
+    "main.css": "/bandwidth-enforcer-plotter/static/css/main.258e8be2.chunk.css",
+    "main.js": "/bandwidth-enforcer-plotter/static/js/main.e212f70a.chunk.js",
+    "main.js.map": "/bandwidth-enforcer-plotter/static/js/main.e212f70a.chunk.js.map",
+    "runtime-main.js": "/bandwidth-enforcer-plotter/static/js/runtime-main.cd53689a.js",
+    "runtime-main.js.map": "/bandwidth-enforcer-plotter/static/js/runtime-main.cd53689a.js.map",
+    "static/js/2.62fe7c91.chunk.js": "/bandwidth-enforcer-plotter/static/js/2.62fe7c91.chunk.js",
+    "static/js/2.62fe7c91.chunk.js.map": "/bandwidth-enforcer-plotter/static/js/2.62fe7c91.chunk.js.map",
+    "index.html": "/bandwidth-enforcer-plotter/index.html",
+    "static/css/main.258e8be2.chunk.css.map": "/bandwidth-enforcer-plotter/static/css/main.258e8be2.chunk.css.map",
+    "static/js/2.62fe7c91.chunk.js.LICENSE.txt": "/bandwidth-enforcer-plotter/static/js/2.62fe7c91.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.cd53689a.js",
+    "static/js/2.62fe7c91.chunk.js",
+    "static/css/main.258e8be2.chunk.css",
+    "static/js/main.e212f70a.chunk.js"
+  ]
+}
