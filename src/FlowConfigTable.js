@@ -1,128 +1,73 @@
 import React from "react";
-import styled from "styled-components";
-import { useTable } from "react-table";
-
-//doc: https://react-table.tanstack.com/docs/examples/grouping
-
-const Styles = styled.div`
-  padding: 0;
-
-  table {
-    border-spacing: 0;
-    border: 1px solid black;
-
-    tr {
-      :last-child {
-        td {
-          border-bottom: 0;
-        }
-      }
-    }
-
-    th,
-    td {
-      margin: 0;
-      padding: 0.2rem;
-      border-bottom: 1px solid black;
-      border-right: 1px solid black;
-      text-align: center;
-      :last-child {
-        border-right: 0;
-      }
-    }
-  }
-`;
-
-function Table({ columns, data }) {
-  // Use the state and functions returned from useTable to build your UI
-  const {
-    getTableProps,
-    getTableBodyProps,
-    headerGroups,
-    rows,
-    prepareRow,
-  } = useTable({
-    columns,
-    data,
-  });
-
-  // Render the UI for your table
-  return (
-    <table {...getTableProps()}>
-      <thead>
-        {headerGroups.map((headerGroup) => (
-          <tr {...headerGroup.getHeaderGroupProps()}>
-            {headerGroup.headers.map((column) => (
-              <th {...column.getHeaderProps()}>{column.render("Header")}</th>
-            ))}
-          </tr>
-        ))}
-      </thead>
-      <tbody {...getTableBodyProps()}>
-        {rows.map((row, i) => {
-          prepareRow(row);
-          return (
-            <tr {...row.getRowProps()}>
-              {row.cells.map((cell) => {
-                return <td {...cell.getCellProps()}>{cell.render("Cell")}</td>;
-              })}
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  );
-}
-
-const makeData = (flowGroup, allocLevels) => {
-  const res = [];
-  for (let i = 0; i < allocLevels.length; i++) {
-    for (let j = 0; j < flowGroup.allocLevels[i].length; j++) {
-      const bw = flowGroup.allocLevels[i][j][0];
-      res.push({
-        allocLevel: j === 0 ? allocLevels[i].name : "",
-        bandwidth: bw === Infinity ? "\u221E" : bw,
-        weight: flowGroup.allocLevels[i][j][1],
-        subRows: undefined,
-      });
-    }
-  }
-  return res;
-};
 
 function FlowConfigTable({ flowGroup, allocLevels }) {
-  const columns = React.useMemo(
-    () => [
-      {
-        Header: `${flowGroup.name} (${flowGroup.estimatedDemand} est. demand)`,
-        columns: [
-          {
-            Header: "Allocation Level",
-            accessor: "allocLevel",
-          },
-          {
-            Header: "Weight",
-            accessor: "weight",
-          },
-          {
-            Header: "Bandwidth",
-            accessor: "bandwidth",
-          },
-        ],
-      },
-    ],
-    [flowGroup]
-  );
+  //init data
+  const topHeader = `${flowGroup.name} (${flowGroup.estimatedDemand} est. demand)`;
+  const headers = ["Allocation level", "Weight", "Bandwidth"];
+  const entries = [];
+  for (let i = 0; i < allocLevels.length; i++) {
+    for (let j = 0; j < flowGroup.allocLevels[i].length; j++) {
+      const [bw, w] = flowGroup.allocLevels[i][j];
+      entries.push(j === 0 ? allocLevels[i].name : "");
+      entries.push(w);
+      entries.push(bw === Infinity ? "\u221E" : bw);
+    }
+  }
 
-  const data = React.useMemo(() => makeData(flowGroup, allocLevels), [
-    flowGroup,
-    allocLevels,
-  ]);
+  //formatting (repeated from Allocation Level Table)
+  const borderStyle = "1px solid black";
+  const tableStyle = {
+    borderTop: borderStyle,
+    borderLeft: borderStyle,
+  };
+  const entryStyle = {
+    margin: 0,
+    padding: "0.2rem",
+    borderBottom: borderStyle,
+    borderRight: borderStyle,
+    textAlign: "center",
+    justifySelf: "stretch",
+    alignSelf: "stretch",
+  };
+  const headerStyle = { ...entryStyle };
+  headerStyle.fontWeight = "bold";
+  const topHeaderStyle = { ...headerStyle };
+  topHeaderStyle.color = flowGroup.color;
+
+  const divs = [];
+  for (let i = 0; i < headers.length; i += 1) {
+    divs.push(
+      <div key={`h${i}`} style={headerStyle}>
+        {headers[i]}
+      </div>
+    );
+  }
+  for (let i = 0; i < entries.length; i += 1) {
+    divs.push(
+      <div key={`e${i}`} style={entryStyle}>
+        {entries[i]}
+      </div>
+    );
+  }
 
   return (
-    <Styles>
-      <Table columns={columns} data={data} />
-    </Styles>
+    <div style={tableStyle}>
+      <div style={topHeaderStyle}>{topHeader}</div>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateRows: `repeat(${allocLevels.length + 1}, 1fr)`,
+          gridTemplateColumns: "auto auto auto",
+          columnGap: 0,
+          justifyItems: "start", //horizontal
+          alignItems: "center", //vertical
+          justifyContent: "start",
+          margin: 0,
+        }}
+      >
+        {divs.map((div) => div)}
+      </div>
+    </div>
   );
 }
 
