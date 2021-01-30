@@ -1,9 +1,9 @@
-//max bandwidth estimated demand for a single flowgroup
-export const bandwidthCutoff = 25;
+//max values to display in plots
+export const plotBwCutoff = 25;
+export const plotLinkCapCutoff = 40;
+export const plotFairShareCutoff = 5;
 
-//max fair share to display in plots
-export const fairShareCutoff = 5;
-
-export const availableBandwidthCutoff = 40;
+//max estimated demand for a flow group
+export const maxEstDemand = 20;
 
 export const fairShareColor = "red";

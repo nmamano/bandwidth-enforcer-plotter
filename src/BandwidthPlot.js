@@ -8,14 +8,18 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import { bandwidthCutoff, fairShareCutoff, fairShareColor } from "./globals";
+import { plotBwCutoff, plotFairShareCutoff, fairShareColor } from "./globals";
 import { bandwidthFunctionDataPoints } from "./fairShareLogic";
+import { removeFlatPoints } from "./utils";
 
 function BandwidthPlot({ flowGroup, allocLevels }) {
-  let data = bandwidthFunctionDataPoints(flowGroup, allocLevels);
-  data = data.map(([fs, bw]) => {
-    return { fs: fs === Infinity ? fairShareCutoff : fs, bw: bw };
+  const pts = bandwidthFunctionDataPoints(flowGroup, allocLevels); //points [fs, bw]
+  //remove data points where the slope doesn't change
+  const uniqPts = removeFlatPoints(pts);
+  const data = uniqPts.map(([fs, bw]) => {
+    return { fs: fs === Infinity ? plotFairShareCutoff : fs, bw: bw };
   });
+
   //documentation: http://recharts.org/en-US/examples/JointLineScatterChart
   return (
     <ScatterChart
@@ -45,7 +49,7 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
       <XAxis
         type="number"
         dataKey="fs"
-        domain={[0, fairShareCutoff]}
+        domain={[0, plotFairShareCutoff]}
         name="Fair Share"
         label={{ value: "Fair Share", position: "insideBottom" }}
         height={40}
@@ -62,7 +66,7 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
           angle: -90,
         }}
         width={40}
-        domain={[0, bandwidthCutoff]}
+        domain={[0, plotBwCutoff]}
         tickCount={6}
       />
       <Tooltip />

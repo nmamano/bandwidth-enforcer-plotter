@@ -8,6 +8,7 @@ import {
   flowGroup1FromPaper,
   flowGroup2FromPaper,
 } from "./paperExamples";
+import { maxEstDemand } from "./globals";
 // eslint-disable-next-line
 import { allTests } from "./tests";
 
@@ -21,6 +22,17 @@ function App() {
     flowGroup1FromPaper(),
     flowGroup2FromPaper(),
   ]);
+
+  const handleModifyEstDemand = (idx, inc) => {
+    updateFlowGroups((draftFgs) => {
+      const fg = draftFgs[idx];
+      if (inc) {
+        if (fg.estimatedDemand < maxEstDemand) fg.estimatedDemand += 1;
+      } else {
+        if (fg.estimatedDemand > 0) fg.estimatedDemand -= 1;
+      }
+    });
+  };
 
   // allTests();
 
@@ -50,7 +62,11 @@ function App() {
         }}
       >
         <AllocationLevelTable allocLevels={allocLevels} />
-        <FlowGroupList flowGroups={flowGroups} allocLevels={allocLevels} />
+        <FlowGroupList
+          flowGroups={flowGroups}
+          allocLevels={allocLevels}
+          handleModifyEstDemand={handleModifyEstDemand}
+        />
       </div>
       <LinkAllocationPlot flowGroups={flowGroups} allocLevels={allocLevels} />
     </div>

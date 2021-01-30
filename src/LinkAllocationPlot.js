@@ -9,30 +9,31 @@ import {
   ReferenceLine,
 } from "recharts";
 import {
-  availableBandwidthCutoff,
-  bandwidthCutoff,
-  fairShareCutoff,
+  plotLinkCapCutoff,
+  plotBwCutoff,
+  plotFairShareCutoff,
   fairShareColor,
 } from "./globals";
+import { removeFlatPoints } from "./utils";
 import {
-  fairShareDataPoints,
+  linkFairShareDataPoints,
   allocatedBandwidthDataPoints,
 } from "./fairShareLogic";
 
 function LinkAllocationPlot({ flowGroups, allocLevels }) {
-  const fairShareData = fairShareDataPoints(flowGroups, allocLevels).map(
-    ([bw, fs]) => {
-      return { bw: bw, fs: fs === Infinity ? fairShareCutoff : fs };
-    }
-  );
+  const fairShareData = removeFlatPoints(
+    linkFairShareDataPoints(flowGroups, allocLevels)
+  ).map(([cap, fs]) => {
+    return { cap: cap, fs: fs === Infinity ? plotFairShareCutoff : fs };
+  });
 
   const allocatedBwData = allocatedBandwidthDataPoints(
     flowGroups,
     allocLevels
   ).map((allocBwPoints) => {
-    return allocBwPoints.map(([availableBw, allocatedBw]) => {
+    return removeFlatPoints(allocBwPoints).map(([availableBw, allocatedBw]) => {
       return {
-        bw: availableBw === Infinity ? availableBandwidthCutoff : availableBw,
+        cap: availableBw === Infinity ? plotLinkCapCutoff : availableBw,
         albw: allocatedBw,
       };
     });
@@ -40,17 +41,17 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
 
   const availableBwTicks = [];
   const availableBwTickStep = 2.5;
-  for (let i = 0; i <= availableBandwidthCutoff; i += availableBwTickStep) {
+  for (let i = 0; i <= plotLinkCapCutoff; i += availableBwTickStep) {
     availableBwTicks.push(i);
   }
   const fsTicks = [];
   const fsTickStep = 0.5;
-  for (let i = 0; i <= fairShareCutoff; i += fsTickStep) {
+  for (let i = 0; i <= plotFairShareCutoff; i += fsTickStep) {
     fsTicks.push(i);
   }
   const allocatedBwTicks = [];
   const allocatedBwTickStep = 2.5;
-  for (let i = 0; i <= bandwidthCutoff; i += allocatedBwTickStep) {
+  for (let i = 0; i <= plotBwCutoff; i += allocatedBwTickStep) {
     allocatedBwTicks.push(i);
   }
 
@@ -64,18 +65,18 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
       <CartesianGrid />
       <XAxis
         type="number"
-        dataKey="bw"
-        domain={[0, availableBandwidthCutoff]}
-        label={{ value: "Available Bandwidth", position: "insideBottom" }}
+        dataKey="cap"
+        domain={[0, plotLinkCapCutoff]}
+        label={{ value: "Link Capacity", position: "insideBottom" }}
         height={40}
-        name="Available Bandwidth"
+        name="Link Capacity"
         ticks={availableBwTicks}
         minTickGap={2}
       />
       <YAxis
         type="number"
         dataKey="albw"
-        domain={[0, fairShareCutoff]}
+        domain={[0, plotFairShareCutoff]}
         name="Allocated Bandwidth"
         label={{
           value: "Allocated Bandwidth",
@@ -93,7 +94,7 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
       <YAxis
         type="number"
         dataKey="fs"
-        domain={[0, fairShareCutoff]}
+        domain={[0, plotFairShareCutoff]}
         name="Fair Share"
         label={{
           value: "Fair Share",

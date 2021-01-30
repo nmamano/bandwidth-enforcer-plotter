@@ -5,7 +5,7 @@ import {
 } from "./paperExamples";
 import {
   bandwidthFunctionDataPoints,
-  fairShareDataPoints,
+  linkFairShareDataPoints,
   allocatedBandwidthDataPoints,
 } from "./fairShareLogic";
 
@@ -86,7 +86,7 @@ const testLinkFairShare = () => {
   const fgs = [flowGroup1FromPaper(), flowGroup2FromPaper()];
 
   const correctFs = JSON.stringify(paperLinkFairShare);
-  const actualFs = JSON.stringify(fairShareDataPoints(fgs, allocLevels));
+  const actualFs = JSON.stringify(linkFairShareDataPoints(fgs, allocLevels));
   if (correctFs === actualFs) {
     console.log("fair share ok");
   } else {

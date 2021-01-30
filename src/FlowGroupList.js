@@ -2,7 +2,7 @@ import React from "react";
 import BandwidthPlot from "./BandwidthPlot";
 import FlowConfigTable from "./FlowConfigTable";
 
-function FlowGroupList({ flowGroups, allocLevels }) {
+function FlowGroupList({ flowGroups, allocLevels, handleModifyEstDemand }) {
   return (
     <div>
       {flowGroups.map((fg, idx) => {
@@ -19,7 +19,7 @@ function FlowGroupList({ flowGroups, allocLevels }) {
               justifyContent: "start",
             }}
           >
-            <FlowConfigTable flowGroup={fg} allocLevels={allocLevels} />
+            <FlowConfigTable flowGroup={fg} allocLevels={allocLevels} handleModifyEstDemand={(inc) => handleModifyEstDemand(idx, inc)} />
             <BandwidthPlot flowGroup={fg} allocLevels={allocLevels} />
           </div>
         );

@@ -12,7 +12,7 @@ function AllocationLevelTable({ allocLevels }) {
   }
 
   //formatting
-  const borderStyle = "1px solid black";
+  const borderStyle = "2px solid black";
   const tableStyle = {
     borderTop: borderStyle,
     borderLeft: borderStyle,

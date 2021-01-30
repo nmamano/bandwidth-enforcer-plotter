@@ -4,7 +4,12 @@ export const bandwidthFunctionDataPoints = (flowGroup, allocLevels) => {
   let [curFs, curBw] = [0, 0];
   const fgConfig = flowGroup.allocLevels;
   for (let i = 0; i < allocLevels.length; i++) {
-    res.push([curFs, curBw]);
+    if (
+      i === 0 ||
+      curFs !== res[res.length - 1][0] ||
+      curBw !== res[res.length - 1][1]
+    )
+      res.push([curFs, curBw]);
     let prevThreshold = 0;
     for (let j = 0; j < fgConfig[i].length; j++) {
       let [threshold, weight] = fgConfig[i][j];
@@ -14,9 +19,13 @@ export const bandwidthFunctionDataPoints = (flowGroup, allocLevels) => {
       );
       prevThreshold = threshold;
       if (weight > 0) {
-        curBw += bwIncrement;
         curFs += bwIncrement / weight;
-        res.push([curFs, curBw]);
+        curBw += bwIncrement;
+        if (
+          curFs !== res[res.length - 1][0] ||
+          curBw !== res[res.length - 1][1]
+        )
+          res.push([curFs, curBw]);
       }
     }
     curFs = allocLevels[i].maxFairShare;
@@ -60,8 +69,8 @@ const fairShareValues = (bwFuncs) => {
   return res;
 };
 
-//returns the data points as [available bw, fair share] pairs
-export const fairShareDataPoints = (flowGroups, allocLevels) => {
+//returns the data points as [link cap, fair share] pairs
+export const linkFairShareDataPoints = (flowGroups, allocLevels) => {
   const bwFuncs = flowGroups.map((fg) =>
     bandwidthFunctionDataPoints(fg, allocLevels)
   );
@@ -69,34 +78,34 @@ export const fairShareDataPoints = (flowGroups, allocLevels) => {
   const res = [];
   for (let i = 0; i < fsValues.length; i++) {
     const fs = fsValues[i];
-    const allocBw = totalAllocatedBandwidth(bwFuncs, fs);
-    res.push([allocBw, fs]);
+    const linkCap = totalAllocatedBandwidth(bwFuncs, fs);
+    res.push([linkCap, fs]);
   }
   return res;
 };
 
-//returns the data points as [available bw, allocated bw] pairs
+//returns the data points as [link cap, allocated bw] pairs for each flow group
 export const allocatedBandwidthDataPoints = (flowGroups, allocLevels) => {
   const bwFuncs = flowGroups.map((fg) =>
     bandwidthFunctionDataPoints(fg, allocLevels)
   );
-  const availableBwFsPairs = fairShareDataPoints(flowGroups, allocLevels);
+  const linkCapFsPairs = linkFairShareDataPoints(flowGroups, allocLevels);
   let fsValues = fairShareValues(bwFuncs);
-  let availableBwValues = [];
-  for (let i = 0; i < availableBwFsPairs.length; i++) {
-    const [availableBw, fs] = availableBwFsPairs[i];
-    if (i === 0 || fs !== availableBwFsPairs[i - 1][1]) {
-      availableBwValues.push(availableBw);
+  let linkCapValues = [];
+  for (let i = 0; i < linkCapFsPairs.length; i++) {
+    const [linkCap, fs] = linkCapFsPairs[i];
+    if (i === 0 || fs !== linkCapFsPairs[i - 1][1]) {
+      linkCapValues.push(linkCap);
     }
   }
   const res = [];
   for (let i = 0; i < bwFuncs.length; i++) {
     const allocBwValues = [];
     for (let j = 0; j < fsValues.length; j++) {
-      const availBw = availableBwValues[j];
-      if (j === 0 || availBw !== availableBwValues[j - 1]) {
+      const linkCap = linkCapValues[j];
+      if (j === 0 || linkCap !== linkCapValues[j - 1]) {
         allocBwValues.push([
-          availableBwValues[j],
+          linkCap,
           allocatedBandwidth(bwFuncs[i], fsValues[j]),
         ]);
       }

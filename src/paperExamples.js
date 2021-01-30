@@ -5,7 +5,7 @@
 import {
   makeEmptyFlowGroup,
   changeFGName,
-  changeFGEstimatedDemand,
+  changeFGEstDemand,
   changeFGThreshold,
   changeFGWeight,
   addFGThreshold,
@@ -24,7 +24,7 @@ export const allocationLevelsFromPaper = () => [
 export const flowGroup1FromPaper = () => {
   const fg1 = makeEmptyFlowGroup(2);
   changeFGName(fg1, "fg1");
-  changeFGEstimatedDemand(fg1, 15);
+  changeFGEstDemand(fg1, 15);
   changeFGThreshold(fg1, 1, 0, 10);
   changeFGWeight(fg1, 1, 0, 20);
   addFGThreshold(fg1, 1, Infinity, 5);
@@ -35,7 +35,7 @@ export const flowGroup1FromPaper = () => {
 export const flowGroup2FromPaper = () => {
   const fg2 = makeEmptyFlowGroup(2);
   changeFGName(fg2, "fg2");
-  changeFGEstimatedDemand(fg2, 20);
+  changeFGEstDemand(fg2, 20);
   changeFGThreshold(fg2, 0, 0, 10);
   changeFGWeight(fg2, 0, 0, 10);
   changeFGWeight(fg2, 1, 0, 10);

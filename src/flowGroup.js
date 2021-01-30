@@ -51,7 +51,7 @@ export const makeEmptyFlowGroup = (numAllocLvls) => {
 export const changeFGName = (fg, newName) => {
   fg.name = newName;
 };
-export const changeFGEstimatedDemand = (fg, newDemand) => {
+export const changeFGEstDemand = (fg, newDemand) => {
   fg.estimatedDemand = newDemand;
 };
 export const addFGThreshold = (fg, allocLvl, newBandwidth, newWeight) => {
