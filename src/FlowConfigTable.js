@@ -1,8 +1,25 @@
 import React from "react";
-import { maxEstDemand } from "./globals";
+import { IoIosAddCircleOutline, IoIosCloseCircleOutline } from "react-icons/io";
+import {
+  maxEstDemand,
+  weightLimit,
+  bandwidthLimit,
+  maxNumWeightThresholds,
+} from "./globals";
+import { thresholdChangeViolatesFairShareSpan } from "./fairShareLogic";
+
 import IncrementableButton from "./IncrementableButton";
 
-function FlowConfigTable({ flowGroup, allocLevels, handleModifyEstDemand }) {
+function FlowConfigTable({
+  flowGroup,
+  allocLevels,
+  handleEstDemand,
+  handleNumWeightThresholds,
+  handleWeightThreshold,
+}) {
+  const totalWidth = 320;
+  const buttonWidth = 90;
+
   const borderStyle = "1px solid black";
   const thickBorderStyle = "2px solid black";
   const tableStyle = {
@@ -24,8 +41,21 @@ function FlowConfigTable({ flowGroup, allocLevels, handleModifyEstDemand }) {
   topHeaderStyle.color = flowGroup.color;
   topHeaderStyle.borderRight = thickBorderStyle;
 
-  const totalWidth = 320;
-  const buttonWidth = 90;
+  const allocLvlDivStyle = { ...cellStyle };
+  allocLvlDivStyle.display = "grid";
+  allocLvlDivStyle.gridTemplateRows = "auto";
+  allocLvlDivStyle.gridTemplateColumns = "1fr 20px 20px";
+  allocLvlDivStyle.alignItems = "center";
+  const allocTextDivStyle = { justifySelf: "start" };
+  const weightThresholdButtonStyle = {
+    cursor: "pointer",
+    MozUserSelect: "none",
+    WebkitUserSelect: "none",
+    msUserSelect: "none",
+    userSelect: "none",
+    fontSize: "18px",
+    paddingTop: "0.2rem",
+  };
 
   const topHeader = `${flowGroup.name}`;
   const topHeaderDiv = <div style={topHeaderStyle}>{topHeader}</div>;
@@ -37,10 +67,10 @@ function FlowConfigTable({ flowGroup, allocLevels, handleModifyEstDemand }) {
       min={0}
       max={maxEstDemand}
       onInc={() => {
-        handleModifyEstDemand(true);
+        handleEstDemand(true);
       }}
       onDec={() => {
-        handleModifyEstDemand(false);
+        handleEstDemand(false);
       }}
       width={buttonWidth}
       thickBottom
@@ -79,33 +109,115 @@ function FlowConfigTable({ flowGroup, allocLevels, handleModifyEstDemand }) {
   let rowCount = 1;
   for (let i = 0; i < allocLevels.length; i++) {
     rowCount += flowGroup.allocLevels[i].length;
+    const addWeightThresholdButton = (
+      <div
+        style={weightThresholdButtonStyle}
+        onClick={() => handleNumWeightThresholds(i, true)}
+      >
+        <IoIosAddCircleOutline />
+      </div>
+    );
+    const removeWeightThesholdButton = (
+      <div
+        style={weightThresholdButtonStyle}
+        onClick={() => handleNumWeightThresholds(i, false)}
+      >
+        <IoIosCloseCircleOutline />
+      </div>
+    );
     for (let j = 0; j < flowGroup.allocLevels[i].length; j++) {
-      const [bw, w] = flowGroup.allocLevels[i][j];
-      const allocLvl = j === 0 ? allocLevels[i].name : "";
-      const allocDivStyle = { ...cellStyle };
+      const isFirst = j === 0;
       const isLast = j === flowGroup.allocLevels[i].length - 1;
+      const removeButtonHere = isLast && !isFirst;
+      const addButtonHere = isLast && j < maxNumWeightThresholds;
+      const [bw, weight] = flowGroup.allocLevels[i][j];
+      const allocLvlText = isFirst ? allocLevels[i].name : "";
+      const divStyle = { ...allocLvlDivStyle };
       if (!isLast) {
-        allocDivStyle.borderBottom = undefined;
+        divStyle.borderBottom = undefined;
       } else {
-        allocDivStyle.borderBottom = thickBorderStyle;
+        divStyle.borderBottom = thickBorderStyle;
       }
       const allocLvlDiv = (
-        <div key={`a${i}_${j}`} style={allocDivStyle}>
-          {allocLvl}
+        <div key={`a${i}_${j}`} style={divStyle}>
+          <div style={allocTextDivStyle}>{allocLvlText}</div>
+          {removeButtonHere ? removeWeightThesholdButton : <div></div>}
+          {addButtonHere ? addWeightThresholdButton : <div></div>}
         </div>
       );
+      const maxW = isFirst ? weightLimit : flowGroup.allocLevels[i][j - 1][1];
+      const minW = isLast ? 0 : flowGroup.allocLevels[i][j + 1][1];
       const weightButton = (
         <IncrementableButton
           key={`w${i}_${j}`}
-          value={w}
+          value={weight}
+          min={minW}
+          max={maxW}
+          onInc={() => {
+            handleWeightThreshold(i, j, true, true);
+          }}
+          onDec={() => {
+            handleWeightThreshold(i, j, true, false);
+          }}
+          disabledInc={thresholdChangeViolatesFairShareSpan(
+            flowGroup,
+            allocLevels,
+            i,
+            j,
+            true,
+            true
+          )}
+          disabledDec={thresholdChangeViolatesFairShareSpan(
+            flowGroup,
+            allocLevels,
+            i,
+            j,
+            true,
+            false
+          )}
           width={buttonWidth}
           thickBottom={isLast}
         />
       );
+      const maxBw = isLast
+        ? bandwidthLimit
+        : flowGroup.allocLevels[i][j + 1][0];
+      const minBw = isFirst ? 0 : flowGroup.allocLevels[i][j - 1][0];
       const bwButton = (
         <IncrementableButton
           key={`b${i}_${j}`}
           value={bw}
+          text={
+            <span>
+              <span style={{ color: "gray" }}>{`${minBw}-`}</span>
+              <span>{`${bw === Infinity ? "\u221E" : bw}`}</span>
+            </span>
+          }
+          min={minBw}
+          max={maxBw}
+          onInc={() => {
+            handleWeightThreshold(i, j, false, true);
+          }}
+          onDec={() => {
+            handleWeightThreshold(i, j, false, false);
+          }}
+          disabled={bw === Infinity || weight === 0}
+          disabledInc={thresholdChangeViolatesFairShareSpan(
+            flowGroup,
+            allocLevels,
+            i,
+            j,
+            false,
+            true
+          )}
+          disabledDec={thresholdChangeViolatesFairShareSpan(
+            flowGroup,
+            allocLevels,
+            i,
+            j,
+            false,
+            false
+          )}
           width={buttonWidth}
           thickBottom={isLast}
           thickRight

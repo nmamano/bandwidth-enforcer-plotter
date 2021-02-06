@@ -18,13 +18,10 @@ function AllocationLevelTable({ allocLevels }) {
     borderLeft: borderStyle,
   };
   const entryStyle = {
-    margin: 0,
-    padding: "0.2rem",
+    padding: "0.2em",
     borderBottom: borderStyle,
     borderRight: borderStyle,
     textAlign: "center",
-    justifySelf: "stretch",
-    alignSelf: "stretch",
   };
   const headerStyle = { ...entryStyle };
   headerStyle.fontWeight = "bold";
@@ -52,11 +49,6 @@ function AllocationLevelTable({ allocLevels }) {
           display: "grid",
           gridTemplateRows: `repeat(${allocLevels.length + 1}, 1fr)`,
           gridTemplateColumns: "auto auto",
-          columnGap: 0,
-          justifyItems: "start", //horizontal
-          alignItems: "center", //vertical
-          justifyContent: "start",
-          margin: 0,
         }}
       >
         {divs.map((div) => div)}

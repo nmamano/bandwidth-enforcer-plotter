@@ -8,45 +8,58 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
+import { plotBwCutoff, plotBaseMaxFairShare, fairShareColor } from "./globals";
 import {
-  plotLinkCapCutoff,
-  plotBwCutoff,
-  plotFairShareCutoff,
-  fairShareColor,
-} from "./globals";
-import { removeFlatPoints } from "./utils";
-import {
+  bandwidthFunctionDataPoints,
   linkFairShareDataPoints,
   allocatedBandwidthDataPoints,
 } from "./fairShareLogic";
 
-function LinkAllocationPlot({ flowGroups, allocLevels }) {
-  const fairShareData = removeFlatPoints(
-    linkFairShareDataPoints(flowGroups, allocLevels)
-  ).map(([cap, fs]) => {
-    return { cap: cap, fs: fs === Infinity ? plotFairShareCutoff : fs };
-  });
+const defaultPlotLinkCap = 40;
 
-  const allocatedBwData = allocatedBandwidthDataPoints(
-    flowGroups,
-    allocLevels
-  ).map((allocBwPoints) => {
-    return removeFlatPoints(allocBwPoints).map(([availableBw, allocatedBw]) => {
-      return {
-        cap: availableBw === Infinity ? plotLinkCapCutoff : availableBw,
-        albw: allocatedBw,
-      };
-    });
+/*
+X-axis: link capacity
+left Y-axis: allocated bandwidth
+right Y-axis: fair share
+*/
+function LinkAllocationPlot({ flowGroups, allocLevels }) {
+  const bwFunctions = flowGroups.map((fg) =>
+    bandwidthFunctionDataPoints(fg, allocLevels)
+  );
+  const fsPts = linkFairShareDataPoints(bwFunctions);
+  const plotMaxFs = fsPts.reduce(
+    (accum, [cap, fs]) => (fs === Infinity ? accum : Math.max(accum, fs + 1)),
+    plotBaseMaxFairShare
+  );
+  const fairShareData = fsPts.map(([cap, fs], idx) => {
+    const prevCap = idx === 0 ? 0 : fsPts[idx - 1][0];
+    return fs === Infinity
+      ? { fs: plotMaxFs, cap: prevCap }
+      : { fs: fs, cap: cap };
   });
+  const totalNeededLinkCap = flowGroups.reduce(
+    (accum, fg) => accum + fg.estimatedDemand,
+    0
+  );
+  const plotMaxCap = Math.max(totalNeededLinkCap + 5, defaultPlotLinkCap);
+  const allocatedBwPts = allocatedBandwidthDataPoints(bwFunctions).map(
+    (allocBwPts) => {
+      return allocBwPts.map(([availableBw, allocatedBw]) => {
+        return availableBw === Infinity
+          ? { cap: plotMaxCap, allocBw: allocatedBw }
+          : { cap: availableBw, allocBw: allocatedBw };
+      });
+    }
+  );
 
   const availableBwTicks = [];
   const availableBwTickStep = 2.5;
-  for (let i = 0; i <= plotLinkCapCutoff; i += availableBwTickStep) {
+  for (let i = 0; i <= plotMaxCap; i += availableBwTickStep) {
     availableBwTicks.push(i);
   }
   const fsTicks = [];
   const fsTickStep = 0.5;
-  for (let i = 0; i <= plotFairShareCutoff; i += fsTickStep) {
+  for (let i = 0; i <= plotMaxFs; i += fsTickStep) {
     fsTicks.push(i);
   }
   const allocatedBwTicks = [];
@@ -66,7 +79,7 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
       <XAxis
         type="number"
         dataKey="cap"
-        domain={[0, plotLinkCapCutoff]}
+        domain={[0, plotMaxCap]}
         label={{ value: "Link Capacity", position: "insideBottom" }}
         height={40}
         name="Link Capacity"
@@ -75,8 +88,8 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
       />
       <YAxis
         type="number"
-        dataKey="albw"
-        domain={[0, plotFairShareCutoff]}
+        dataKey="allocBw"
+        domain={[0, plotMaxFs]}
         name="Allocated Bandwidth"
         label={{
           value: "Allocated Bandwidth",
@@ -94,7 +107,7 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
       <YAxis
         type="number"
         dataKey="fs"
-        domain={[0, plotFairShareCutoff]}
+        domain={[0, plotMaxFs]}
         name="Fair Share"
         label={{
           value: "Fair Share",
@@ -119,7 +132,7 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
         shape="cross"
         yAxisId="right"
       />
-      {allocatedBwData.map((allocBwPoints, idx) => {
+      {allocatedBwPts.map((allocBwPoints, idx) => {
         return (
           <Scatter
             key={`ab${idx}`}

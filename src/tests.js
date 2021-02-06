@@ -54,7 +54,6 @@ const paperAllocatedBwF2 = [
   [10, 10],
   [25, 15],
   [32.5, 20],
-  [35, 20],
   [Infinity, 20],
 ];
 
@@ -84,9 +83,11 @@ const testLinkFairShare = () => {
   console.log("Test: allocated bandwidth");
   const allocLevels = allocationLevelsFromPaper();
   const fgs = [flowGroup1FromPaper(), flowGroup2FromPaper()];
-
+  const bwFunctions = fgs.map((fg) =>
+    bandwidthFunctionDataPoints(fg, allocLevels)
+  );
   const correctFs = JSON.stringify(paperLinkFairShare);
-  const actualFs = JSON.stringify(linkFairShareDataPoints(fgs, allocLevels));
+  const actualFs = JSON.stringify(linkFairShareDataPoints(bwFunctions));
   if (correctFs === actualFs) {
     console.log("fair share ok");
   } else {
@@ -100,10 +101,9 @@ const testLinkFairShare = () => {
     JSON.stringify(paperAllocatedBwF1),
     JSON.stringify(paperAllocatedBwF2),
   ];
-  const actualAllocBws = allocatedBandwidthDataPoints(
-    fgs,
-    allocLevels
-  ).map((L) => JSON.stringify(L));
+  const actualAllocBws = allocatedBandwidthDataPoints(bwFunctions).map((L) =>
+    JSON.stringify(L)
+  );
   for (let i = 0; i < 2; i += 1) {
     const fg = fgs[i];
     const correctAllocBw = correctAllocBws[i];

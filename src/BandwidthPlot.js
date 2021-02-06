@@ -8,16 +8,19 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import { plotBwCutoff, plotFairShareCutoff, fairShareColor } from "./globals";
+import { plotBwCutoff, plotBaseMaxFairShare, fairShareColor } from "./globals";
 import { bandwidthFunctionDataPoints } from "./fairShareLogic";
-import { removeFlatPoints } from "./utils";
 
 function BandwidthPlot({ flowGroup, allocLevels }) {
   const pts = bandwidthFunctionDataPoints(flowGroup, allocLevels); //points [fs, bw]
-  //remove data points where the slope doesn't change
-  const uniqPts = removeFlatPoints(pts);
-  const data = uniqPts.map(([fs, bw]) => {
-    return { fs: fs === Infinity ? plotFairShareCutoff : fs, bw: bw };
+  const plotMaxFs = pts.reduce(
+    (accum, [fs, bw]) => (fs === Infinity ? accum : Math.max(accum, fs + 1)),
+    plotBaseMaxFairShare
+  );
+  const data = pts.map(([fs, bw], idx) => {
+    const prevBw = idx === 0 ? 0 : pts[idx - 1][1];
+    console.assert(fs !== Infinity || bw === prevBw, bw, prevBw);
+    return fs === Infinity ? { fs: plotMaxFs, bw: prevBw } : { fs: fs, bw: bw };
   });
 
   //documentation: http://recharts.org/en-US/examples/JointLineScatterChart
@@ -49,7 +52,7 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
       <XAxis
         type="number"
         dataKey="fs"
-        domain={[0, plotFairShareCutoff]}
+        domain={[0, plotBaseMaxFairShare]}
         name="Fair Share"
         label={{ value: "Fair Share", position: "insideBottom" }}
         height={40}
