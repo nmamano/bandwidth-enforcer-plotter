@@ -106,18 +106,15 @@ const fairShareValues = (bwFuncs) => {
   return res;
 };
 
-/* Given a list of bandwidth functions, returns the aggregated fair share function
-as a function of the available capacity of a link shared by all the flow groups.
-The aggregated fair share function is returned as a sorted list of points [link cap, fair share].
-
-The following observation gives us the list of candidate points to consider:
-all the linear-piece endpoints of the aggregated fair share function must also be 
-a linear-piece endpoint of one of the bandwidth functions. */
-export const linkFairShareDataPoints = (bwFunctions) => {
+/* Given a list of bandwidth functions, returns the aggregated bandwidth function
+as a sorted list of points [fair share, bandwidth].
+Observation: all the linear-piece endpoints of the aggregated bandwidth function
+must also be a linear-piece endpoint of one of the bandwidth functions. */
+export const aggregatedBandwidthFunctionDataPoints = (bwFunctions) => {
   const fsValues = fairShareValues(bwFunctions);
   const res = fsValues.map((fs) => [
-    totalAllocatedBandwidth(bwFunctions, fs),
     fs,
+    totalAllocatedBandwidth(bwFunctions, fs),
   ]);
   return removeFlatPoints(res);
 };
@@ -126,16 +123,15 @@ export const linkFairShareDataPoints = (bwFunctions) => {
 of them as a function of the available capacity of a link shared by all the flow groups.
 Each allocated bandwidth function is returned as an ordered list of pairs [link cap, allocated bw] */
 export const allocatedBandwidthDataPoints = (bwFuncs) => {
-  const linkCapFsPairs = linkFairShareDataPoints(bwFuncs);
+  const fsBwPairs = aggregatedBandwidthFunctionDataPoints(bwFuncs); //[fs, bw] pairs
 
   const allocatedBwSingleFg = (bwFunc) => {
-    const res = linkCapFsPairs.map(([linkCap, fs]) => [
-      linkCap,
+    const res = fsBwPairs.map(([fs, bw]) => [
+      bw,
       allocatedBandwidth(bwFunc, fs),
     ]);
     //last point: link with infinite cap, the allocated bw is the same as the previous point
     res.push([Infinity, res[res.length - 1][1]]);
-
     return removeFlatPoints(res);
   };
 

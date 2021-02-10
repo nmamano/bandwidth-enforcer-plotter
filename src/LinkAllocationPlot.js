@@ -11,7 +11,7 @@ import {
 import { plotBwCutoff, plotBaseMaxFairShare, fairShareColor } from "./globals";
 import {
   bandwidthFunctionDataPoints,
-  linkFairShareDataPoints,
+  aggregatedBandwidthFunctionDataPoints,
   allocatedBandwidthDataPoints,
 } from "./fairShareLogic";
 
@@ -26,22 +26,22 @@ function LinkAllocationPlot({ flowGroups, allocLevels }) {
   const bwFunctions = flowGroups.map((fg) =>
     bandwidthFunctionDataPoints(fg, allocLevels)
   );
-  const fsPts = linkFairShareDataPoints(bwFunctions);
-  const plotMaxFs = fsPts.reduce(
-    (accum, [cap, fs]) => (fs === Infinity ? accum : Math.max(accum, fs + 1)),
+  const fsBwPairs = aggregatedBandwidthFunctionDataPoints(bwFunctions); //[fs, bw] pairs
+  const plotMaxFs = fsBwPairs.reduce(
+    (accum, [fs, bw]) => (fs === Infinity ? accum : Math.max(accum, fs + 1)),
     plotBaseMaxFairShare
   );
-  const fairShareData = fsPts.map(([cap, fs], idx) => {
-    const prevCap = idx === 0 ? 0 : fsPts[idx - 1][0];
+  const fairShareData = fsBwPairs.map(([fs, bw], idx) => {
+    const prevBw = idx === 0 ? 0 : fsBwPairs[idx - 1][1];
     return fs === Infinity
-      ? { fs: plotMaxFs, cap: prevCap }
-      : { fs: fs, cap: cap };
+      ? { fs: plotMaxFs, cap: prevBw }
+      : { fs: fs, cap: bw };
   });
-  const totalNeededLinkCap = flowGroups.reduce(
+  const totalEstDemand = flowGroups.reduce(
     (accum, fg) => accum + fg.estimatedDemand,
     0
   );
-  const plotMaxCap = Math.max(totalNeededLinkCap + 5, defaultPlotLinkCap);
+  const plotMaxCap = Math.max(totalEstDemand + 5, defaultPlotLinkCap);
   const allocatedBwPts = allocatedBandwidthDataPoints(bwFunctions).map(
     (allocBwPts) => {
       return allocBwPts.map(([availableBw, allocatedBw]) => {

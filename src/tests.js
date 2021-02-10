@@ -5,7 +5,7 @@ import {
 } from "./paperExamples";
 import {
   bandwidthFunctionDataPoints,
-  linkFairShareDataPoints,
+  aggregatedBandwidthFunctionDataPoints,
   allocatedBandwidthDataPoints,
 } from "./fairShareLogic";
 
@@ -27,15 +27,15 @@ const paperFg2BandwidthFunction = [
   [Infinity, 20],
 ];
 
-//pink line in figure 4 as pairs [available bw, fair share]
+//pink line in figure 4 as pairs [fair share, total allocated bw]
 const paperLinkFairShare = [
   [0, 0],
-  [10, 1],
-  [10, 2],
-  [25, 2.5],
-  [32.5, 3],
-  [35, 3.5],
-  [35, Infinity],
+  [1, 10],
+  [2, 10],
+  [2.5, 25],
+  [3, 32.5],
+  [3.5, 35],
+  [Infinity, 35],
 ];
 
 //figure 4 (fg1) as pairs [available bw, allocated bw]
@@ -87,7 +87,9 @@ const testLinkFairShare = () => {
     bandwidthFunctionDataPoints(fg, allocLevels)
   );
   const correctFs = JSON.stringify(paperLinkFairShare);
-  const actualFs = JSON.stringify(linkFairShareDataPoints(bwFunctions));
+  const actualFs = JSON.stringify(
+    aggregatedBandwidthFunctionDataPoints(bwFunctions)
+  );
   if (correctFs === actualFs) {
     console.log("fair share ok");
   } else {

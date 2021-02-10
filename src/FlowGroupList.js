@@ -34,20 +34,19 @@ function FlowGroupList({
     </div>
   );
 
+  const sideBySideDivStyle = {
+    display: "grid",
+    gridTemplateRows: "1fr",
+    gridTemplateColumns: "auto auto",
+    columnGap: "10px",
+    alignItems: "center",
+  };
+
   return (
     <div>
       {flowGroups.map((fg, fgIdx) => {
         return (
-          <div
-            key={fgIdx}
-            style={{
-              display: "grid",
-              gridTemplateRows: "1fr",
-              gridTemplateColumns: "auto auto",
-              columnGap: "10px",
-              alignItems: "center",
-            }}
-          >
+          <div key={fgIdx} style={sideBySideDivStyle}>
             <FlowConfigTable
               flowGroup={fg}
               allocLevels={allocLevels}

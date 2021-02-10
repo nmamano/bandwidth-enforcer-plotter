@@ -8,22 +8,33 @@ import {
   Tooltip,
   ReferenceLine,
 } from "recharts";
-import { plotBwCutoff, plotBaseMaxFairShare, fairShareColor } from "./globals";
-import { bandwidthFunctionDataPoints } from "./fairShareLogic";
+import { plotBaseMaxFairShare, fairShareColor } from "./globals";
+import {
+  bandwidthFunctionDataPoints,
+  aggregatedBandwidthFunctionDataPoints,
+} from "./fairShareLogic";
 
-function BandwidthPlot({ flowGroup, allocLevels }) {
-  const pts = bandwidthFunctionDataPoints(flowGroup, allocLevels); //points [fs, bw]
-  const plotMaxFs = pts.reduce(
+const defaultAggrEstDemand = 40;
+
+function BandwidthAggregationPlot({ flowGroups, allocLevels }) {
+  const bwFunctions = flowGroups.map((fg) =>
+    bandwidthFunctionDataPoints(fg, allocLevels)
+  );
+  const bwPts = aggregatedBandwidthFunctionDataPoints(bwFunctions); //[fs, bw] pairs
+  const plotMaxFs = bwPts.reduce(
     (accum, [fs, bw]) => (fs === Infinity ? accum : Math.max(accum, fs + 1)),
     plotBaseMaxFairShare
   );
-  const data = pts.map(([fs, bw], idx) => {
-    const prevBw = idx === 0 ? 0 : pts[idx - 1][1];
-    console.assert(fs !== Infinity || bw === prevBw, bw, prevBw);
+  const totalEstDemand = flowGroups.reduce(
+    (accum, fg) => accum + fg.estimatedDemand,
+    0
+  );
+  const plotMaxBw = Math.max(totalEstDemand + 5, defaultAggrEstDemand);
+
+  const data = bwPts.map(([fs, bw], idx) => {
+    const prevBw = idx === 0 ? 0 : bwPts[idx - 1][1];
     return fs === Infinity ? { fs: plotMaxFs, bw: prevBw } : { fs: fs, bw: bw };
   });
-
-  const plotMaxBw = Math.max(flowGroup.estimatedDemand + 5, plotBwCutoff);
 
   const bwTicks = [];
   const bwTickStep = 5;
@@ -36,11 +47,10 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
     fsTicks.push(i);
   }
 
-  //documentation: http://recharts.org/en-US/examples/JointLineScatterChart
   return (
     <ScatterChart
-      width={420}
-      height={230}
+      width={644}
+      height={390}
       margin={{ top: 5, right: 5, left: 5, bottom: 5 }}
     >
       <CartesianGrid />
@@ -85,17 +95,17 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
       <Scatter
         name="Fair Share"
         data={data}
-        fill={flowGroup.color}
-        line={{ strokeWidth: 2.5 }}
+        fill={"black"}
+        line={{ strokeWidth: 2 }}
       />
       <ReferenceLine
-        y={flowGroup.estimatedDemand}
+        y={totalEstDemand}
         label={{
           value: "Est. demand",
-          fill: flowGroup.color,
+          fill: "black",
           position: "insideBottomRight",
         }}
-        stroke={flowGroup.color}
+        stroke={"black"}
         strokeDasharray="3 3"
         strokeWidth={0.8}
         isFront={true}
@@ -104,4 +114,4 @@ function BandwidthPlot({ flowGroup, allocLevels }) {
   );
 }
 
-export default BandwidthPlot;
+export default BandwidthAggregationPlot;

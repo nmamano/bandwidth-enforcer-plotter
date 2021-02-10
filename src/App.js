@@ -1,7 +1,9 @@
+import { useState } from "react";
 import { useImmer } from "use-immer";
 import "./App.css";
 import FlowGroupList from "./FlowGroupList";
 import LinkAllocationPlot from "./LinkAllocationPlot";
+import BandwidthAggregationPlot from "./BandwidthAggregationPlot";
 import AllocationLevelTable from "./AllocationLevelTable";
 import {
   allocationLevelsFromPaper,
@@ -24,6 +26,8 @@ const fgColors = [
 
 function App() {
   // allTests();
+
+  const [showLinkAllocation, setShowLinkAllocation] = useState(false);
 
   /* Currently, the UI does not allow for a way to modify the allocation levels,
   so they are fixed, but the code is designed to be extendible to an arbitrary number */
@@ -142,7 +146,7 @@ function App() {
   };
 
   //header on top, main plot below
-  const bandwidthAggregationDivStyle = flowGroupDivStyle;
+  const bigPlotStyle = flowGroupDivStyle;
 
   return (
     <div style={mainDivStyle}>
@@ -157,9 +161,34 @@ function App() {
           handleNumFlowGroups={handleNumFlowGroups}
         />
       </div>
-      <div style={bandwidthAggregationDivStyle}>
-        <div style={{ fontSize: "24px" }}>Bandwidth function aggregation</div>
-        <LinkAllocationPlot flowGroups={flowGroups} allocLevels={allocLevels} />
+      <div style={bigPlotStyle}>
+        <div>
+          <span style={{ fontSize: "20px" }}>Show Link Allocation</span>
+          <input
+            style={{ fontSize: "24px" }}
+            name="showLinkAlloc"
+            type="checkbox"
+            checked={showLinkAllocation}
+            onChange={() => {
+              setShowLinkAllocation(!showLinkAllocation);
+            }}
+          />
+        </div>
+        <div style={{ fontSize: "24px" }}>
+          {showLinkAllocation ? "Link allocation" : "Bandwidth Aggregation"}
+        </div>
+        {showLinkAllocation && (
+          <LinkAllocationPlot
+            flowGroups={flowGroups}
+            allocLevels={allocLevels}
+          />
+        )}
+        {!showLinkAllocation && (
+          <BandwidthAggregationPlot
+            flowGroups={flowGroups}
+            allocLevels={allocLevels}
+          />
+        )}
       </div>
     </div>
   );
